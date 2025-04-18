@@ -1,9 +1,9 @@
 import { redirect } from "next/navigation"
 import { getSession } from "@/lib/auth"
 import { getAssets } from "@/lib/assets"
-import DashboardView from "@/components/dashboard-view"
+import AssetsList from "@/components/assets-list"
 
-export default async function Home() {
+export default async function AssetsPage() {
   const session = await getSession()
 
   if (!session) {
@@ -14,7 +14,8 @@ export default async function Home() {
 
   return (
     <main className="container mx-auto px-4 py-8">
-      <DashboardView assets={assets} />
+      <h1 className="mb-6 text-3xl font-bold">Your Assets</h1>
+      <AssetsList assets={assets} />
     </main>
   )
 }

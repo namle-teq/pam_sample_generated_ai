@@ -1,20 +1,18 @@
 import { redirect } from "next/navigation"
 import { getSession } from "@/lib/auth"
-import { getAssets } from "@/lib/assets"
-import DashboardView from "@/components/dashboard-view"
+import AddAssetForm from "@/components/add-asset-form"
 
-export default async function Home() {
+export default async function AddAssetPage() {
   const session = await getSession()
 
   if (!session) {
     redirect("/login")
   }
 
-  const assets = await getAssets(session.user.id)
-
   return (
     <main className="container mx-auto px-4 py-8">
-      <DashboardView assets={assets} />
+      <h1 className="mb-6 text-3xl font-bold">Add New Asset</h1>
+      <AddAssetForm userId={session.user.id} />
     </main>
   )
 }
