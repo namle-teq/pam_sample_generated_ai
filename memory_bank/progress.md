@@ -8,12 +8,14 @@
 
 ## Pending Features
 1. Backend API integration
-2. JWT authentication flow
-3. Data persistence layer
-4. Error handling system
+2. JWT authentication flow (50% complete)
+3. Token refresh mechanism
+4. Data persistence layer
+5. Error handling system
 
 ## Known Issues
 - Form validation not connected
 - Chart uses static data
 - No loading states
 - Missing test coverage
+- Session persistence needs testing

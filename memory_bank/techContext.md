@@ -12,6 +12,7 @@
 - recharts (data visualization)
 - zod (validation)
 - react-hook-form
+- @auth0/nextjs-auth0 (JWT authentication)
 
 ## Development Tools
 - ESLint (config: eslint.config.mjs)
@@ -23,3 +24,4 @@
 - Node.js 18+
 - Vercel deployment environment
 - JWT-compatible auth provider
+- JWT_SECRET environment variable required

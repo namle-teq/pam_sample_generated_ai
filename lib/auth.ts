@@ -3,6 +3,36 @@
 import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 import type { User, Session } from "./types"
+import jwt from "jsonwebtoken"
+import bcrypt from "bcryptjs"
+
+const JWT_SECRET = process.env.JWT_SECRET || "dev-secret" // Replace with env var in production
+const JWT_EXPIRES_IN = "7d"
+
+function generateToken(user: User) {
+  return jwt.sign(
+    { id: user.id, email: user.email, name: user.name },
+    JWT_SECRET,
+    { expiresIn: JWT_EXPIRES_IN }
+  )
+}
+
+function validateToken(token: string): User | null {
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET) as User
+    return decoded
+  } catch {
+    return null
+  }
+}
+
+async function hashPassword(password: string): Promise<string> {
+  return bcrypt.hash(password, 10)
+}
+
+async function comparePassword(password: string, hash: string): Promise<boolean> {
+  return bcrypt.compare(password, hash)
+}
 
 // Mock database for users
 const users: User[] = [
@@ -13,10 +43,14 @@ const users: User[] = [
   },
 ]
 
-// Mock password storage (in a real app, you'd use hashed passwords)
+/**
+ * Mock password storage (now stores hashed passwords)
+ * In a real app, use a database.
+ */
 const passwords: Record<string, string> = {
-  "demo@example.com": "password123",
+  "demo@example.com": "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZGHFQW1Yy1Q8v2p5rWQxQ5Q5Q5Q5K"
 }
+
 
 export async function getSession(): Promise<Session | null> {
   const cookieStore = await cookies()
@@ -27,14 +61,11 @@ export async function getSession(): Promise<Session | null> {
   }
 
   try {
-    // In a real app, you'd verify the session token
-    const userId = sessionCookie.value
-    const user = users.find((u) => u.id === userId)
-
+    // Validate JWT token
+    const user: User | null = validateToken(sessionCookie.value)
     if (!user) {
       return null
     }
-
     return { user }
   } catch (error) {
     return null
@@ -49,14 +80,23 @@ export async function login(formData: FormData) {
   await new Promise((resolve) => setTimeout(resolve, 1000))
 
   const user = users.find((u) => u.email === email)
+  const hash = passwords[email]
 
-  if (!user || passwords[email] !== password) {
+  if (!user || !hash) {
     return { success: false, error: "Invalid email or password" }
   }
 
-  // Set a cookie to simulate a session
+  const valid = await comparePassword(password, hash)
+  if (!valid) {
+    return { success: false, error: "Invalid email or password" }
+  }
+
+  // Generate JWT token
+  const token = generateToken(user)
+
+  // Set JWT cookie
   const cookieStore = await cookies()
-  cookieStore.set("session", user.id, {
+  cookieStore.set("session", token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     maxAge: 60 * 60 * 24 * 7, // 1 week
@@ -79,6 +119,9 @@ export async function register(formData: FormData) {
     return { success: false, error: "Email already in use" }
   }
 
+  // Hash the password
+  const hashed = await hashPassword(password)
+
   // Create new user
   const newUser: User = {
     id: `${users.length + 1}`,
@@ -87,11 +130,14 @@ export async function register(formData: FormData) {
   }
 
   users.push(newUser)
-  passwords[email] = password
+  passwords[email] = hashed
 
-  // Set a cookie to simulate a session
+  // Generate JWT token
+  const token = generateToken(newUser)
+
+  // Set JWT cookie
   const cookieStore = await cookies()
-  cookieStore.set("session", newUser.id, {
+  cookieStore.set("session", token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     maxAge: 60 * 60 * 24 * 7, // 1 week
