@@ -5,8 +5,11 @@ import { redirect } from "next/navigation"
 import type { User, Session } from "./types"
 import jwt from "jsonwebtoken"
 import bcrypt from "bcryptjs"
+import { db } from "./db"
+import { users as usersTable } from "./schema"
+import { eq } from "drizzle-orm"
 
-const JWT_SECRET = process.env.JWT_SECRET || "dev-secret" // Replace with env var in production
+const JWT_SECRET = process.env.JWT_SECRET!
 const JWT_EXPIRES_IN = "7d"
 
 function generateToken(user: User) {
@@ -34,22 +37,6 @@ async function comparePassword(password: string, hash: string): Promise<boolean>
   return bcrypt.compare(password, hash)
 }
 
-// Mock database for users
-const users: User[] = [
-  {
-    id: "1",
-    name: "Demo User",
-    email: "demo@example.com",
-  },
-]
-
-/**
- * Mock password storage (now stores hashed passwords)
- * In a real app, use a database.
- */
-const passwords: Record<string, string> = {
-  "demo@example.com": "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZGHFQW1Yy1Q8v2p5rWQxQ5Q5Q5Q5K"
-}
 
 
 export async function getSession(): Promise<Session | null> {
@@ -79,20 +66,25 @@ export async function login(formData: FormData) {
   // Simulate network delay
   await new Promise((resolve) => setTimeout(resolve, 1000))
 
-  const user = users.find((u) => u.email === email)
-  const hash = passwords[email]
+  // Query user from database
+  const dbUsers = await db.select().from(usersTable).where(eq(usersTable.email, email)).limit(1)
+  const dbUser = dbUsers[0]
 
-  if (!user || !hash) {
+  if (!dbUser) {
     return { success: false, error: "Invalid email or password" }
   }
 
-  const valid = await comparePassword(password, hash)
+  const valid = await comparePassword(password, dbUser.passwordHash)
   if (!valid) {
     return { success: false, error: "Invalid email or password" }
   }
 
   // Generate JWT token
-  const token = generateToken(user)
+  const token = generateToken({
+    id: dbUser.id.toString(),
+    name: dbUser.name ?? "",
+    email: dbUser.email,
+  })
 
   // Set JWT cookie
   const cookieStore = await cookies()
@@ -115,25 +107,34 @@ export async function register(formData: FormData) {
   await new Promise((resolve) => setTimeout(resolve, 1000))
 
   // Check if user already exists
-  if (users.some((u) => u.email === email)) {
+  const existingUsers = await db.select().from(usersTable).where(eq(usersTable.email, email)).limit(1)
+  if (existingUsers.length > 0) {
     return { success: false, error: "Email already in use" }
   }
 
   // Hash the password
   const hashed = await hashPassword(password)
 
-  // Create new user
-  const newUser: User = {
-    id: `${users.length + 1}`,
-    name,
-    email,
-  }
+  // Insert new user
+  const inserted = await db
+    .insert(usersTable)
+    .values({
+      email,
+      name,
+      passwordHash: hashed,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    })
+    .returning()
 
-  users.push(newUser)
-  passwords[email] = hashed
+  const newUser = inserted[0]
 
   // Generate JWT token
-  const token = generateToken(newUser)
+  const token = generateToken({
+    id: newUser.id.toString(),
+    name: newUser.name ?? "",
+    email: newUser.email,
+  })
 
   // Set JWT cookie
   const cookieStore = await cookies()
