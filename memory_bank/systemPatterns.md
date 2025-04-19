@@ -26,16 +26,22 @@ flowchart TD
         C -->|Valid| D[Generate JWT]
         C -->|Invalid| E[Return Error]
         D --> F[Set Secure Cookie]
+        F --> G[Redirect to Dashboard]
     end
     style B stroke:#ff9900,stroke-width:2px
 ```
 - Core JWT logic implemented in `lib/auth.ts`
+- Session cookies use `SameSite: "strict"` for CSRF protection
+- Token validation checks user existence in the database
+- Redirects to dashboard after successful login/register
 
 ## Key Patterns
 1. Server Components for initial page loads
 2. Client-side interactivity with React hooks
 3. Modular component library (shadcn/ui)
 4. Type-safe API interactions via lib/types.ts
+5. Secure session management (SameSite cookies, user existence validation)
+6. Redirect handling after authentication
 
 ## Data Models
 

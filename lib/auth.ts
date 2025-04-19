@@ -20,9 +20,14 @@ function generateToken(user: User) {
   )
 }
 
-function validateToken(token: string): User | null {
+async function validateToken(token: string): Promise<User | null> {
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as User
+    // Check if user exists in DB
+    const dbUsers = await db.select().from(usersTable).where(eq(usersTable.id, Number(decoded.id))).limit(1)
+    if (!dbUsers[0]) {
+      return null
+    }
     return decoded
   } catch {
     return null
@@ -49,7 +54,7 @@ export async function getSession(): Promise<Session | null> {
 
   try {
     // Validate JWT token
-    const user: User | null = validateToken(sessionCookie.value)
+    const user: User | null = await validateToken(sessionCookie.value)
     if (!user) {
       return null
     }
@@ -91,11 +96,12 @@ export async function login(formData: FormData) {
   cookieStore.set("session", token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
     maxAge: 60 * 60 * 24 * 7, // 1 week
     path: "/",
   })
 
-  return { success: true }
+  redirect("/")
 }
 
 export async function register(formData: FormData) {
@@ -141,11 +147,12 @@ export async function register(formData: FormData) {
   cookieStore.set("session", token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
     maxAge: 60 * 60 * 24 * 7, // 1 week
     path: "/",
   })
 
-  return { success: true }
+  redirect("/")
 }
 
 export async function signOut() {
