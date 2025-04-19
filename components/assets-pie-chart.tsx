@@ -4,9 +4,9 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Legend } from "recharts"
 import type { Asset, AssetType } from "@/lib/types"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 
-interface AssetsPieChartProps {
-  assets: (Asset & { totalValue: number })[]
-}
+import useSWR from "swr"
+
+const fetcher = (url: string) => fetch(url).then(res => res.json())
 
 // Colors for different asset types
 const COLORS: Record<AssetType, string> = {
@@ -17,10 +17,18 @@ const COLORS: Record<AssetType, string> = {
   Other: "hsl(var(--chart-5))",
 }
 
-export default function AssetsPieChart({ assets }: AssetsPieChartProps) {
+export default function AssetsPieChart() {
+  const { data: assets, error, isLoading } = useSWR<Asset[]>("/api/assets", fetcher)
+
+  // Compute totalValue for each asset (amount * current_pricing)
+  const assetsWithValue = (assets || []).map((asset: Asset) => ({
+    ...asset,
+    totalValue: asset.amount * asset.current_pricing,
+  }))
+
   // Group assets by type
-  const assetsByType = assets.reduce(
-    (acc, asset) => {
+  const assetsByType = assetsWithValue.reduce(
+    (acc: Record<AssetType, number>, asset: Asset & { totalValue: number }) => {
       const type = asset.type
       if (!acc[type]) {
         acc[type] = 0
@@ -49,6 +57,13 @@ export default function AssetsPieChart({ assets }: AssetsPieChartProps) {
       },
     ]),
   )
+
+  if (isLoading) {
+    return <div>Loading...</div>
+  }
+  if (error) {
+    return <div className="text-destructive">Failed to load asset data</div>
+  }
 
   return (
     <ChartContainer config={chartConfig} className="h-full">

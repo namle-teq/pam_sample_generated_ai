@@ -7,14 +7,14 @@
 4. Integration and smoke testing
 
 ## Recent Changes
-- JWT authentication logic completed in `lib/auth.ts`
-  - Session cookies now use `SameSite: "strict"` for CSRF protection
-  - Token validation checks user existence in the database
-  - Redirects added after successful login/register
-- Type definitions established
-- Core UI components created
-- Initial project scaffolding
-- Memory bank initialized
+- Database schema finalized in `lib/schema.ts` with:
+  - Users table (email/password auth)
+  - Assets table with numeric precision fields
+  - Proper timestamp columns
+- API endpoints created for asset CRUD operations
+- Asset forms connected to backend API
+- Pie chart now fetches live data from `/api/assets`
+- Drizzle migrations updated with latest schema
 
 ## Next Steps
 1. Connect asset forms to backend API

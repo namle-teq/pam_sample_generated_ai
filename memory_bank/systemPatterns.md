@@ -45,24 +45,25 @@ flowchart TD
 
 ## Data Models
 
-- **Asset** (see `lib/types.ts`):
-  - id: string
-  - userId: string
+- **Asset** (see `lib/schema.ts`):
+  - id: number
   - name: string
-  - type: "Stock" | "Crypto" | "Cash" | "Gold" | "Other"
-  - amount: number
-  - avg_pricing: number
-  - current_pricing: number
-  - unit: "USD" | "VND"
-  - purchaseDate: string
-  - notes?: string
-  - createdAt: string
-  - updatedAt: string
+  - type: string (categorical)
+  - amount: numeric (precision 20, scale 8)
+  - avg_pricing: numeric (precision 20, scale 8)
+  - current_pricing: numeric (precision 20, scale 8)
+  - unit: string
+  - userId: number (foreign key to users)
+  - createdAt: timestamp
+  - updatedAt: timestamp
 
-- **User** (see `lib/types.ts`):
-  - id: string
+- **User** (see `lib/schema.ts`):
+  - id: number
+  - email: string (unique)
   - name: string
-  - email: string
+  - passwordHash: string
+  - createdAt: timestamp
+  - updatedAt: timestamp
 
 ## Critical Paths
 - app/login/page.tsx → lib/auth.ts

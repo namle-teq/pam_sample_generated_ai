@@ -6,15 +6,17 @@
   - Session cookies use SameSite: "strict"
   - Token validation checks user existence
   - Redirects after login/register
-- Asset CRUD form components
-- Dashboard layout and chart shell
-- Responsive navigation
+- Asset CRUD form components connected to backend API
+- Dashboard with live data fetching from `/api/assets`
+- Full-stack data persistence layer
+- API endpoints for asset operations
+- Database schema and migrations
 
 ## Pending Features
-1. Backend API integration for assets
-2. Data persistence layer
-3. Error handling system
-4. Connect asset forms to backend
+1. Comprehensive error handling system
+2. Loading states for API interactions
+3. Form validation improvements
+4. Integration and smoke testing
 5. Chart data fetching from live data
 
 ## Known Issues

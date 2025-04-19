@@ -7,7 +7,6 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-import { addAsset } from "@/lib/assets"
 import type { AssetType, CurrencyUnit } from "@/lib/types"
 
 interface AddAssetFormProps {
@@ -26,17 +25,29 @@ export default function AddAssetForm({ userId }: AddAssetFormProps) {
     setError("")
 
     try {
-      // Add the type and unit from state to the form data
-      formData.append("type", type)
-      formData.append("unit", unit)
-      formData.append("userId", userId)
+      // Gather form values into a JS object
+      const data = {
+        name: formData.get("name"),
+        type,
+        amount: Number(formData.get("amount")),
+        avg_pricing: Number(formData.get("avg_pricing")),
+        current_pricing: Number(formData.get("current_pricing")),
+        unit,
+        purchaseDate: formData.get("purchaseDate"),
+        notes: formData.get("notes") || undefined,
+      };
 
-      const result = await addAsset(formData)
+      const res = await fetch("/api/assets", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
 
-      if (result.success) {
+      if (res.ok) {
         router.push("/assets")
         router.refresh()
       } else {
+        const result = await res.json();
         setError(result.error || "Failed to add asset")
       }
     } catch (error) {

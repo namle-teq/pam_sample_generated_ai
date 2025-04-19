@@ -7,7 +7,6 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-import { updateAsset } from "@/lib/assets"
 import type { Asset, AssetType, CurrencyUnit } from "@/lib/types"
 
 interface EditAssetFormProps {
@@ -27,18 +26,29 @@ export default function EditAssetForm({ asset, userId }: EditAssetFormProps) {
     setError("")
 
     try {
-      // Add the type and unit from state to the form data
-      formData.append("type", type)
-      formData.append("unit", unit)
-      formData.append("userId", userId)
-      formData.append("id", asset.id)
+      // Gather form values into a JS object
+      const data = {
+        name: formData.get("name"),
+        type,
+        amount: Number(formData.get("amount")),
+        avg_pricing: Number(formData.get("avg_pricing")),
+        current_pricing: Number(formData.get("current_pricing")),
+        unit,
+        purchaseDate: formData.get("purchaseDate"),
+        notes: formData.get("notes") || undefined,
+      };
 
-      const result = await updateAsset(formData)
+      const res = await fetch(`/api/assets/${asset.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
 
-      if (result.success) {
+      if (res.ok) {
         router.push("/assets")
         router.refresh()
       } else {
+        const result = await res.json();
         setError(result.error || "Failed to update asset")
       }
     } catch (error) {

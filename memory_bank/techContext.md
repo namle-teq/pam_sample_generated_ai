@@ -16,6 +16,9 @@
 - drizzle-orm (PostgreSQL ORM)
 - drizzle-kit (migrations)
 - pg (PostgreSQL driver)
+- swr (data fetching)
+- uuid (ID generation)
+- bcryptjs (password hashing)
 
 ## Database
 
