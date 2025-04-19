@@ -36,12 +36,15 @@ export async function POST(req: NextRequest) {
       current_pricing: data.current_pricing,
       unit: data.unit,
       userId: Number(session.user.id),
+      purchaseDate: new Date(data.purchaseDate),
+      notes: data.notes || undefined,
       createdAt: now,
       updatedAt: now,
     };
     const [inserted] = await db.insert(assets).values(insertData).returning();
     return NextResponse.json(inserted, { status: 201 });
   } catch (error) {
+		console.log(error)
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
   }
 }

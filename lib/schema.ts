@@ -1,4 +1,4 @@
-import { pgTable, serial, varchar, numeric, timestamp, integer } from "drizzle-orm/pg-core";
+import { pgTable, serial, varchar, numeric, timestamp, integer, text } from "drizzle-orm/pg-core";
 
 // Users table
 export const users = pgTable("users", {
@@ -19,6 +19,8 @@ export const assets = pgTable("assets", {
   current_pricing: numeric("current_pricing", { precision: 20, scale: 8 }).notNull(),
   unit: varchar("unit", { length: 10 }).notNull(),
   userId: integer("user_id").references(() => users.id),
+  purchaseDate: timestamp("purchase_date", { withTimezone: true }).notNull(),
+  notes: text("notes"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });

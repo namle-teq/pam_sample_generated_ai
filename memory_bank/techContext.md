@@ -25,9 +25,13 @@
 - **PostgreSQL** used as primary database.
 - **Drizzle ORM** for type-safe queries and schema management.
 - **Migrations** managed with drizzle-kit.
-- **Config:** `drizzle.config.ts`
+- **Config:** `drizzle.config.ts`  
+  - Loads environment variables from `.env.local` using `dotenv`
 - **Schema:** `lib/schema.ts`
-- **Migrations:** `drizzle/` directory
+- **Migrations:** `drizzle/` directory  
+  - Includes:  
+    - `0000_wooden_dakota_north.sql`  
+    - `0001_soft_sunset_bain.sql`
 - **Connection:** Set `DATABASE_URL` in `.env.local` (default: `postgres://postgres:postgres@localhost:5432/pam`)
 
 ## Development Tools

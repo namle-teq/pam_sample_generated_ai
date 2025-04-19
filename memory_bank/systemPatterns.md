@@ -42,6 +42,9 @@ flowchart TD
 4. Type-safe API interactions via lib/types.ts
 5. Secure session management (SameSite cookies, user existence validation)
 6. Redirect handling after authentication
+7. API endpoints require authentication (returns 401 if not authenticated)
+8. Asset creation (POST /api/assets) now includes `purchaseDate` and `notes` fields
+9. Zod validation planned for asset POST requests (TODO)
 
 ## Data Models
 
@@ -54,6 +57,8 @@ flowchart TD
   - current_pricing: numeric (precision 20, scale 8)
   - unit: string
   - userId: number (foreign key to users)
+  - purchaseDate: timestamp
+  - notes: string (optional)
   - createdAt: timestamp
   - updatedAt: timestamp
 

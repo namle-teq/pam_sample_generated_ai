@@ -9,8 +9,10 @@
 - Asset CRUD form components connected to backend API
 - Dashboard with live data fetching from `/api/assets`
 - Full-stack data persistence layer
-- API endpoints for asset operations
+- API endpoints for asset operations (all endpoints require authentication; asset creation supports `purchaseDate` and `notes`)
 - Database schema and migrations
+  - Added `purchaseDate` and `notes` fields to assets
+  - New migration: `0001_soft_sunset_bain.sql`
 
 ## Pending Features
 1. Comprehensive error handling system
