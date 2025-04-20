@@ -2,11 +2,15 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { assetUpdateSchema } from "@/lib/validation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import type { z } from "zod"
 import type { Asset, AssetType, CurrencyUnit } from "@/lib/types"
 
 interface EditAssetFormProps {
@@ -14,131 +18,145 @@ interface EditAssetFormProps {
   userId: string
 }
 
+type AssetFormValues = z.infer<typeof assetUpdateSchema>
+
+const assetTypes: AssetType[] = ["Stock", "Crypto", "Cash", "Gold", "Other"]
+const currencyUnits: CurrencyUnit[] = ["USD", "VND"]
+
 export default function EditAssetForm({ asset, userId }: EditAssetFormProps) {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState("")
-  const [type, setType] = useState<AssetType>(asset.type)
-  const [unit, setUnit] = useState<CurrencyUnit>(asset.unit)
+  const [apiError, setApiError] = useState("")
 
-  async function handleSubmit(formData: FormData) {
+  // Format date for input field (YYYY-MM-DD)
+  const formattedDate = new Date(asset.purchaseDate).toISOString().split("T")[0]
+
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    formState: { errors },
+    reset,
+    watch,
+  } = useForm<AssetFormValues>({
+    resolver: zodResolver(assetUpdateSchema),
+    defaultValues: {
+      name: asset.name,
+      type: asset.type,
+      amount: asset.amount.toString(),
+      avg_pricing: asset.avg_pricing.toString(),
+      current_pricing: asset.current_pricing.toString(),
+      unit: asset.unit,
+      purchaseDate: formattedDate,
+      notes: asset.notes || "",
+    },
+  })
+
+  async function onSubmit(data: AssetFormValues) {
     setIsLoading(true)
-    setError("")
+    setApiError("")
 
     try {
-      // Gather form values into a JS object
-      const data = {
-        name: formData.get("name"),
-        type,
-        amount: Number(formData.get("amount")),
-        avg_pricing: Number(formData.get("avg_pricing")),
-        current_pricing: Number(formData.get("current_pricing")),
-        unit,
-        purchaseDate: formData.get("purchaseDate"),
-        notes: formData.get("notes") || undefined,
-      };
-
       const res = await fetch(`/api/assets/${asset.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
-      });
+      })
 
       if (res.ok) {
+        reset()
         router.push("/assets")
         router.refresh()
       } else {
-        const result = await res.json();
-        setError(result.error || "Failed to update asset")
+        const result = await res.json()
+        setApiError(result.error || "Failed to update asset")
       }
     } catch (error) {
-      setError("An unexpected error occurred")
+      setApiError("An unexpected error occurred")
     } finally {
       setIsLoading(false)
     }
   }
 
-  // Format date for input field (YYYY-MM-DD)
-  const formattedDate = new Date(asset.purchaseDate).toISOString().split("T")[0]
-
   return (
-    <form action={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" noValidate>
       <div className="space-y-2">
         <Label htmlFor="name">Asset Name</Label>
-        <Input id="name" name="name" defaultValue={asset.name} required />
+        <Input id="name" {...register("name")} required />
+        {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
       </div>
 
       <div className="space-y-2">
         <Label htmlFor="type">Asset Type</Label>
-        <Select value={type} onValueChange={(value) => setType(value as AssetType)} name="type">
+        <Select
+          value={watch("type")}
+          onValueChange={(value) => setValue("type", value as AssetType)}
+        >
           <SelectTrigger>
             <SelectValue placeholder="Select asset type" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="Stock">Stock</SelectItem>
-            <SelectItem value="Crypto">Crypto</SelectItem>
-            <SelectItem value="Cash">Cash</SelectItem>
-            <SelectItem value="Gold">Gold</SelectItem>
-            <SelectItem value="Other">Other</SelectItem>
+            {assetTypes.map((t) => (
+              <SelectItem key={t} value={t}>
+                {t}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
+        {errors.type && <p className="text-sm text-destructive">{errors.type.message}</p>}
       </div>
 
       <div className="space-y-2">
         <Label htmlFor="amount">Amount</Label>
-        <Input id="amount" name="amount" type="number" step="0.01" min="0" defaultValue={asset.amount} required />
+        <Input id="amount" type="number" step="0.01" min="0" {...register("amount")} required />
+        {errors.amount && <p className="text-sm text-destructive">{errors.amount.message}</p>}
       </div>
 
       <div className="space-y-2">
         <Label htmlFor="avg_pricing">Average Purchase Price</Label>
-        <Input
-          id="avg_pricing"
-          name="avg_pricing"
-          type="number"
-          step="0.01"
-          min="0"
-          defaultValue={asset.avg_pricing}
-          required
-        />
+        <Input id="avg_pricing" type="number" step="0.01" min="0" {...register("avg_pricing")} required />
+        {errors.avg_pricing && <p className="text-sm text-destructive">{errors.avg_pricing.message}</p>}
       </div>
 
       <div className="space-y-2">
         <Label htmlFor="current_pricing">Current Price</Label>
-        <Input
-          id="current_pricing"
-          name="current_pricing"
-          type="number"
-          step="0.01"
-          min="0"
-          defaultValue={asset.current_pricing}
-          required
-        />
+        <Input id="current_pricing" type="number" step="0.01" min="0" {...register("current_pricing")} required />
+        {errors.current_pricing && <p className="text-sm text-destructive">{errors.current_pricing.message}</p>}
       </div>
 
       <div className="space-y-2">
         <Label htmlFor="unit">Currency Unit</Label>
-        <Select value={unit} onValueChange={(value) => setUnit(value as CurrencyUnit)} name="unit">
+        <Select
+          value={watch("unit")}
+          onValueChange={(value) => setValue("unit", value as CurrencyUnit)}
+        >
           <SelectTrigger>
             <SelectValue placeholder="Select currency unit" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="USD">USD</SelectItem>
-            <SelectItem value="VND">VND</SelectItem>
+            {currencyUnits.map((u) => (
+              <SelectItem key={u} value={u}>
+                {u}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
+        {errors.unit && <p className="text-sm text-destructive">{errors.unit.message}</p>}
       </div>
 
       <div className="space-y-2">
         <Label htmlFor="purchaseDate">Purchase Date</Label>
-        <Input id="purchaseDate" name="purchaseDate" type="date" defaultValue={formattedDate} required />
+        <Input id="purchaseDate" type="date" {...register("purchaseDate")} required />
+        {errors.purchaseDate && <p className="text-sm text-destructive">{errors.purchaseDate.message}</p>}
       </div>
 
       <div className="space-y-2">
         <Label htmlFor="notes">Notes (Optional)</Label>
-        <Textarea id="notes" name="notes" defaultValue={asset.notes || ""} />
+        <Textarea id="notes" {...register("notes")} />
+        {errors.notes && <p className="text-sm text-destructive">{errors.notes.message}</p>}
       </div>
 
-      {error && <div className="rounded-md bg-destructive/15 p-3 text-sm text-destructive">{error}</div>}
+      {apiError && <div className="rounded-md bg-destructive/15 p-3 text-sm text-destructive">{apiError}</div>}
 
       <div className="flex gap-4">
         <Button type="button" variant="outline" onClick={() => router.back()} disabled={isLoading}>

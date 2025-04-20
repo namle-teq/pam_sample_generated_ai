@@ -4,6 +4,7 @@ import { assets } from '@/lib/schema';
 import { getSession } from '@/lib/auth';
 import { eq } from 'drizzle-orm';
 import type { Asset } from '@/lib/types';
+import { assetSchema } from '@/lib/validation';
 
 export async function GET(req: NextRequest) {
   const session = await getSession();
@@ -26,7 +27,13 @@ export async function POST(req: NextRequest) {
 
   try {
     const data = await req.json();
-    // TODO: Add Zod validation here
+    const result = assetSchema.safeParse(data);
+    if (!result.success) {
+      return NextResponse.json(
+        { error: 'Validation failed', details: result.error.flatten() },
+        { status: 400 }
+      );
+    }
     const now = new Date();
     const insertData = {
       name: data.name,

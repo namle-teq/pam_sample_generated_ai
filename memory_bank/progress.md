@@ -7,6 +7,8 @@
   - Token validation checks user existence
   - Redirects after login/register
 - Asset CRUD form components connected to backend API
+- Asset add/edit forms now use react-hook-form with Zod validation for real-time feedback (components/add-asset-form.tsx, components/edit-asset-form.tsx)
+- Zod validation implemented for asset POST API (lib/validation.ts, app/api/assets/route.ts)
 - Dashboard with live data fetching from `/api/assets`
 - Full-stack data persistence layer
 - API endpoints for asset operations (all endpoints require authentication; asset creation supports `purchaseDate` and `notes`)
@@ -15,11 +17,10 @@
   - New migration: `0001_soft_sunset_bain.sql`
 
 ## Pending Features
-1. Comprehensive error handling system
+1. Comprehensive error handling system (add error boundaries)
 2. Loading states for API interactions
-3. Form validation improvements
-4. Integration and smoke testing
-5. Chart data fetching from live data
+3. Integration and smoke testing
+4. Chart data fetching from live data
 
 ## Known Issues
 - Form validation not connected

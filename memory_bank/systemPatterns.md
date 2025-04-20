@@ -44,7 +44,10 @@ flowchart TD
 6. Redirect handling after authentication
 7. API endpoints require authentication (returns 401 if not authenticated)
 8. Asset creation (POST /api/assets) now includes `purchaseDate` and `notes` fields
-9. Zod validation planned for asset POST requests (TODO)
+9. Zod validation for asset creation and editing:
+   - Zod schemas defined in `lib/validation.ts`
+   - API endpoints (e.g., `app/api/assets/route.ts`) validate request bodies with Zod and return 400 on validation failure
+   - Asset forms (`components/add-asset-form.tsx`, `components/edit-asset-form.tsx`) use react-hook-form with zodResolver for real-time validation feedback
 
 ## Data Models
 
